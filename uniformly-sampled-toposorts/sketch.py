@@ -37,11 +37,11 @@ def uniformly_random(nodes, edges):
     def weighted_random(p):
         # This can be done a lot faster
 
-        # NOTE[ed]: If you change this to `random.randint(0, sum(p.values()))` and `n <= 0`, the algoritm does not work at all.
-        n = random.randint(0, sum(p.values()) - 1)
+        # NOTE[ed]: If you change this to `random.randint(0, sum(p.values()))` and `n <= 0`, the algoritm does not work at all since the sampling is biased towards the first element. It's worth taking extra care making sure this sampling is uniform.
+        n = random.randint(1, sum(p.values()))
         for (a, w) in p.items():
             n -= w
-            if n < 0:
+            if n <= 0:
                 return a
         assert False, "Reached unreachable code"
 
