@@ -11,15 +11,16 @@ nodes = set([0, 1, 2, 3, 5])
 edges = set([(0, 1), (0, 2), (1, 3), (2, 5)])
 
 def is_valid_order(constraints):
-    locked = set(map(lambda x: x[1], constraints))
     def inner(order):
-        available = set(order) - locked
+        picked = set()
+        available = set(order) - set(map(lambda x: x[1], constraints))
         for o in order:
             if o not in available:
                 return False
-            for (a, b) in constraints:
-                if a == o:
-                    available.add(b)
+            picked.add(o)
+            for oo in order:
+                if all((x in picked or y != oo) for (x, y) in constraints):
+                    available.add(oo)
         return True
     return inner
 
@@ -71,7 +72,8 @@ def check_randomness(nodes, edges):
     for _ in range(num_samples):
         samples[uniformly_random(nodes, edges)] += 1
 
-    assert (len(list_permutations(nodes, edges)) == len(samples)), "Cannot generate all orders"
+    all_of_them = list_permutations(nodes, edges)
+    assert (len(all_of_them) == len(samples)), f"Cannot generate all orders ans:{all_of_them}, given:{list(samples.keys())}"
 
     expected = num_samples / len(samples)
     variances = []
@@ -88,19 +90,27 @@ print("First test!")
 print(check_randomness( set(range(5+1))
                       , set([(0, 1), (0, 2), (1, 3), (2, 5)])
                       ))
-print("PASS")
 
 print("Second test!")
 print(check_randomness( set(range(6+1))
                       , set([(0, 1), (1, 2), (1, 3), (0, 4), (4, 5), (5, 6)])
                       ))
-print("PASS")
 
 print("Third test!")
 print(check_randomness( set(range(7+1))
                       , set([(0, 1), (1, 2), (1, 3), (3, 4), (4, 5), (5, 6), (0, 7)])
                       ))
-print("PASS")
+
+print("Fourth test!")
+print(check_randomness( set(range(8+1))
+                      , set([(0, 1), (1, 2), (1, 3), (3, 4), (4, 5), (5, 6), (0, 7)])
+                      ))
+
+print("Fifth test!")
+print(check_randomness( set(range(4+1))
+                      , set([(0, 1), (0, 2), (1, 3), (2, 3), (3, 4)])
+                      ))
+
 
 # m = 5
 # print("--- 1 ---")
