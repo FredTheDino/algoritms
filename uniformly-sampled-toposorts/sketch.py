@@ -225,16 +225,12 @@ def random_and_sort(nodes, edges):
 
     g = graph.Graph.from_nodes_and_edges(nodes, edges)
     seen = set()
-    while len(seen) != len(nodes):
-        i = len(seen)
-        x = sorting[i]
-        unsatisifed = g.incoming(x) - seen
-        if unsatisifed:
-            y = random.choice(tuple(unsatisifed))
-            ii = sorting.index(y, i)
-            sorting[i], sorting[ii] = sorting[ii], sorting[i]
-        else:
+    while seen != nodes:
+        x = sorting[len(seen)]
+        if g.incoming(x).issubset(seen):
             seen.add(x)
+        else:
+            sorting.append(sorting.pop(len(seen)))
     return tuple(sorting)
 
 
