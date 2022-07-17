@@ -219,6 +219,24 @@ def uniformly_random(nodes, edges):
     printx(f"uniformly_random(nodes:{nodes}, edges:{edges}) -> {order}")
     return order
 
+def random_and_sort(nodes, edges):
+    sorting = list(nodes)
+    random.shuffle(sorting)
+
+    g = graph.Graph.from_nodes_and_edges(nodes, edges)
+    seen = set()
+    while len(seen) != len(nodes):
+        i = len(seen)
+        x = sorting[i]
+        unsatisifed = g.incoming(x) - seen
+        if unsatisifed:
+            y = random.choice(tuple(unsatisifed))
+            ii = sorting.index(y, i)
+            sorting[i], sorting[ii] = sorting[ii], sorting[i]
+        else:
+            seen.add(x)
+    return tuple(sorting)
+
 
 def check_randomness(nodes, edges):
     num_samples = 100000
