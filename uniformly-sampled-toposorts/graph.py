@@ -31,7 +31,7 @@ class Graph():
 
     @staticmethod
     def from_nodes_and_edges(nodes, edges):
-        g = graph.Graph()
+        g = Graph()
 
         for n in nodes:
             g.add_node(n)
