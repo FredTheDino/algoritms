@@ -1,7 +1,7 @@
 # I couldn't find a graph data structure that had the basic features I wanted, i.e. precomputed incoming and outgoing sets
 
 from dataclasses import dataclass
-from collections import *
+from collections import OrderedDict
 
 
 @dataclass
@@ -29,6 +29,19 @@ class Graph():
     node_labels = {}
     edge_labels = {}
 
+    @staticmethod
+    def from_nodes_and_edges(nodes, edges):
+        g = graph.Graph()
+
+        for n in nodes:
+            g.add_node(n)
+
+        for (a, b) in edges:
+            g.add_edge(a, b)
+
+        return g
+
+
     def __repr__(self):
         out = OrderedDict()
         inc = OrderedDict()
@@ -41,7 +54,7 @@ class Graph():
     def add_node(self, a, label=None):
         if a not in self.nodes:
             self.nodes[a] = NodeInfo(
-                label=label,
+                label=label or a,
                 outgoing=set(),
                 incoming=set()
             )
