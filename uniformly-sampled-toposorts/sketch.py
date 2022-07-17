@@ -66,7 +66,7 @@ def pupper(nodes, edges):
 
     """
 
-    g = graph.Graph.from_noeds_and_edges(nodes, edges)
+    g = graph.Graph.from_nodes_and_edges(nodes, edges)
 
     # x 1. is there a smaller fork/join between the two given nodes? if so, recurse and modify the graph in there
     # x 1.1. there's a smaller fork/join if there's any edge in/out from this graph which we haven't considered
