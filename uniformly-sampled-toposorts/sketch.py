@@ -87,13 +87,7 @@ def pupper(name, nodes, edges):
     """
     printy(f"pupper(name:{name}, nodes:{nodes}, edges:{edges})")
 
-    g = graph.Graph()
-
-    for n in nodes:
-        g.add_node(n)
-
-    for (a, b) in edges:
-        g.add_edge(a, b)
+    g = graph.Graph.from_nodes_and_edges(nodes, edges)
 
     a = "unique value so we don't accidentally use these again"
     b = "unique value so we don't accidentally use these again"
@@ -434,6 +428,20 @@ def uniformly_random(name, nodes, edges):
     assert is_valid_order(edges)(order), "Not a valid order..."
     printx(f"uniformly_random(nodes:{nodes}, edges:{edges}) -> {order}")
     return order
+
+def random_and_sort(nodes, edges):
+    sorting = list(nodes)
+    random.shuffle(sorting)
+
+    g = graph.Graph.from_nodes_and_edges(nodes, edges)
+    seen = set()
+    while seen != nodes:
+        x = sorting[len(seen)]
+        if g.incoming(x).issubset(seen):
+            seen.add(x)
+        else:
+            sorting.append(sorting.pop(len(seen)))
+    return tuple(sorting)
 
 
 def check_valid_toposort(f, name, nodes, edges):
