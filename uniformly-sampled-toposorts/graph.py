@@ -25,16 +25,17 @@ class NodesAndEdges:
 
 
 class Graph():
-    nodes = {}
-    node_labels = {}
-    edge_labels = {}
+    def __init__(self):
+        self.nodes = {}
+        self.node_labels = {}
+        self.edge_labels = {}
 
     def __repr__(self):
         out = OrderedDict()
         inc = OrderedDict()
-        for (k, n) in self.nodes.items():
-            out[k] = n.outgoing
-            inc[k] = n.incoming
+        for k in self.nodes:
+            out[k] = self.outgoing(k)
+            inc[k] = self.incoming(k)
 
         return f"Graph<out={out}, inc={inc}>"
 
@@ -54,24 +55,29 @@ class Graph():
         del self.nodes[a]
 
     def add_edge(self, a, b, label=None):
+        assert a != b, (a, b, self, "no self-edges for now; they're not in the problem we're solving, so they're indications of bugs instead")
         self.add_node(a, None)
         self.add_node(b, None)
         self.nodes[a].outgoing.add(b)
         self.nodes[b].incoming.add(a)
         self.edge_labels[(a, b)] = label
+        #print(f"add_edge({a} -> {b}) into {self}")
 
     def del_edge(self, a, b):
         self.add_node(a, None)
         self.add_node(b, None)
-        self.nodes[a].outgoing.remove(b)
-        self.nodes[b].incoming.remove(a)
-        del self.edge_labels[(a, b)]
+
+        self.nodes[a].outgoing.discard(b)
+        self.nodes[b].incoming.discard(a)
+        if (a, b) in self.edge_labels:
+            del self.edge_labels[(a, b)]
 
     def outgoing(self, a):
-        return self.nodes[a].outgoing
+        return set(self.nodes[a].outgoing)
 
     def incoming(self, a):
-        return self.nodes[a].incoming
+        assert a in self.nodes, ("a not in self.nodes", a, self)
+        return set(self.nodes[a].incoming)
 
     def node_label(self, a):
         return self.nodes[a].label
@@ -81,14 +87,29 @@ class Graph():
 
     ######
 
-    def reachable(self, start):
+    def transitive_parents(self, start):
         ans = []
         q = [start]
+        seen = set()
         while q != []:
-            qf = filter(lambda x: all(z in ans for z in self.incoming(x)), q)
-            e = q[0]
-            q = list(filter(lambda x: x != e, q))
+            e = q.pop()
+            if e in seen:
+                continue
+            seen.add(e)
             q += self.incoming(e)
+            ans += [e]
+        return ans
+
+    def transitive_children(self, start):
+        ans = []
+        q = [start]
+        seen = set()
+        while q != []:
+            e = q.pop()
+            if e in seen:
+                continue
+            seen.add(e)
+            q += self.outgoing(e)
             ans += [e]
         return ans
 
@@ -104,11 +125,11 @@ class Graph():
     def findLCA(self, head1, head2):
         # TODO[fh]: find lowest common ancestor using range min query, O(h) time in O(1) space, "You can turn LCA problem to RMQ±1 and then use Farach Colton Bender algorithm, which solves RMQ±1 in O(n) preprocessing and O(1) for query."
 
-        r1 = self.reachable(head1)
-        r2 = self.reachable(head2)
+        r1 = self.transitive_parents(head1)
+        r2 = self.transitive_parents(head2)
         assert r1[-1] == r2[-1]
-        print("reachable(head1)", r1)
-        print("reachable(head2)", r2)
+        #print("transitive_parents(head1)", r1)
+        #print("transitive_parents(head2)", r2)
 
         for r1x in r1:
             if r1x in r2:
@@ -117,11 +138,11 @@ class Graph():
     def findLCA_with_paths(self, head1, head2):
         # TODO[fh]: find lowest common ancestor using range min query, O(h) time in O(1) space, "You can turn LCA problem to RMQ±1 and then use Farach Colton Bender algorithm, which solves RMQ±1 in O(n) preprocessing and O(1) for query." I'm not confident the current impl is even correct.
 
-        r1 = self.reachable(head1)
-        r2 = self.reachable(head2)
+        r1 = self.transitive_parents(head1)
+        r2 = self.transitive_parents(head2)
         assert r1[-1] == r2[-1]
-        print("reachable(head1)", r1)
-        print("reachable(head2)", r2)
+        ###print("transitive_parents(head1)", r1)
+        #print("transitive_parents(head2)", r2)
 
         lca = None
         for r1x in r1:
@@ -141,7 +162,7 @@ class Graph():
                 break
             path2 += [n2]
 
-        print(f"path1:{path1}, path2:{path2}")
+        #print(f"path1:{path1}, path2:{path2}")
 
         edges = []
         for p1 in range(len(path1)):
@@ -162,9 +183,40 @@ class Graph():
         new_edges = []
         for ni in range(len(new_order)-1):
             new_edges += [(new_order[ni], new_order[ni+1])]
-        print(f"zip old_edges:{old_edges}, new_edges:{new_edges}, new_order:{new_order}")
+        #print(f"zip old_edges:{old_edges}, new_edges:{new_edges}, new_order:{new_order}")
 
         for (a,b) in old_edges:
             self.del_edge(a,b)
         for (a,b) in new_edges:
             self.add_edge(a,b)
+
+    def toposort_unambiguous_graph(self):
+        nep = self.get_all_nodes_and_edge_pairs()
+        #assert len(nep.edges) + 1 >= len(nep.nodes)
+
+        res = []
+        seen = set()
+        def walker(n):
+            if n in seen:
+                return
+            for i in self.incoming(n):
+                if i not in seen:
+                    return
+            seen.add(n)
+
+            for o in self.outgoing(n):
+                walker(o)
+            res.append(n)
+
+        for n in self.nodes:
+            walker(n)
+        assert len(res) == len(nep.nodes), [res, nep, self]
+        return res
+
+    def transpose(self):
+        for n in self.nodes:
+            inc = self.nodes[n].incoming
+            out = self.nodes[n].outgoing
+            # TODO[fh]: we don't transpose edge labels here; should we?
+            self.nodes[n].incoming = out
+            self.nodes[n].outgoing = inc
